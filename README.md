@@ -1,6 +1,8 @@
 # 🐱 Tiny Cats
 
-A full-stack cat breed explorer with an **AI Advisor** (Google Gemini) and a custom **MCP (Model Context Protocol) server**. Browse cats, filter them, save favorites, add new cats, and get AI-written breed recommendations based on your home (kids / apartment).
+**AI-powered cat breed recommendations with Model Context Protocol (MCP).**
+
+A full-stack cat breed explorer with an **AI Advisor** (Google Gemini) and a custom **MCP server**. Browse cats, filter them, save favorites, add new cats, and get scored breed recommendations based on your lifestyle.
 
 > Built with React, Redux Toolkit, Express, MongoDB, TypeScript, Gemini and MCP.
 
@@ -9,20 +11,22 @@ A full-stack cat breed explorer with an **AI Advisor** (Google Gemini) and a cus
 ## ✨ Features
 
 ### Available now
-- 🔎 Browse all cats with search (name / breed) and filters (kids friendly, apartment friendly)
+- 🔎 Browse all cats with search (name / breed) and filters
 - 🐈 Cat detail page with full facts (energy, lifespan, size, color, tail, food habits, aggression)
 - ➕ Add a new cat with a form
 - ❤️ Favorites saved in the browser (localStorage) with a live counter in the navbar
-- 🤖 **AI Advisor**: pick your preferences and get matching cats from the database plus a Gemini-written breed breakdown (rendered as Markdown)
+- 🤖 **AI Advisor**: multi-preference questionnaire → ranked cats from the database + Gemini-written breed breakdown (Markdown)
 - 🧩 **MCP server** exposing cat tools (`recommend_cats`, `get_all_cats`) that an AI client can call
 - 🌗 Automatic dark / light theme
+- 📊 Score-based recommendations with match percentage, reasons and trade-offs
 
 ### Roadmap
 - [ ] AI chat assistant using MCP tool calling (the model decides which tool to use)
 - [x] Score-based recommendations (match percentage) with more preferences
-- [ ] Compare 2-3 cats side by side
+- [ ] Expanded lifestyle filters (shedding, grooming, vocalization, hypoallergenic, good with dogs/cats, indoor-only, experience level)
+- [ ] Compare 2–3 cats side by side
 - [ ] Server-side search, filters and pagination
-- [ ] User accounts (JWT), roles (user / admin), favorites saved per user
+- [ ] User accounts (Clerk or JWT), roles (user / admin), favorites saved per user
 - [ ] Edit / delete cats and image upload (Cloudinary)
 - [ ] Adoption requests and reviews / ratings
 - [ ] Semantic search with embeddings
@@ -69,7 +73,7 @@ A full-stack cat breed explorer with an **AI Advisor** (Google Gemini) and a cus
 ## 📁 Project Structure
 
 ```
-tiny-cats/
+tiny-cats-mcp/
 ├── backend/
 │   └── src/
 │       ├── config/        # MongoDB connection
@@ -100,13 +104,13 @@ tiny-cats/
 ### Prerequisites
 - Node.js 20+
 - A MongoDB database (local or MongoDB Atlas)
-- A Gemini API key from Google AI Studio
+- A Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
 
 ### 1. Clone and install
 
 ```bash
-git clone <your-repo-url>
-cd tiny-cats
+git clone https://github.com/YOUR_USERNAME/tiny-cats-mcp.git
+cd tiny-cats-mcp
 
 cd backend && npm install
 cd ../frontend && npm install
@@ -115,7 +119,7 @@ cd ../mcp_server && npm install
 
 ### 2. Environment variables
 
-Create `backend/src/.env`:
+Create `backend/.env` (or `backend/src/.env`):
 
 ```env
 PORT=5000
@@ -123,7 +127,7 @@ MONGODB_URI=mongodb://localhost:27017/tiny-cats
 GEMINI_API_KEY=your_gemini_api_key
 ```
 
-> Never commit your `.env` file. Add it to `.gitignore`.
+> Never commit your `.env` file. Keep it in `.gitignore`.
 
 ### 3. Run the project
 
@@ -143,7 +147,7 @@ cd mcp_server
 npm run dev
 ```
 
-The backend starts the MCP server automatically when you call the test route, so you do not need Terminal 3 for that.
+The backend can start the MCP server automatically when you hit the MCP test route, so Terminal 3 is optional for basic use.
 
 ---
 
@@ -157,11 +161,24 @@ Base URL: `http://localhost:5000/api`
 | GET | `/cats/:id` | Get one cat |
 | POST | `/cats/create` | Create a cat |
 | GET | `/cats/search/all?q=` | Search by name or breed |
-| POST | `/cats/recommend` | Cats matching `{ kidsFriendly, apartmentFriendly }` exactly (old endpoint) |
-| POST | `/cats/rank` | Score-based ranking: `{ kidsFriendly?, apartmentFriendly?, energyLevel?, size?, minLifeSpan?, lowAggression?, limit?, minScore? }` |
+| POST | `/cats/recommend` | Exact match on `{ kidsFriendly, apartmentFriendly }` |
+| POST | `/cats/rank` | Score-based ranking with multiple preferences |
 | POST | `/ai/ask` | Send a prompt to Gemini `{ prompt }` |
-| POST | `/aiRecommend/recommendByAi` | AI breed recommendation `{ kidsFriendly, apartmentFriendly }` |
+| POST | `/aiRecommend/recommendByAi` | AI breed recommendation |
 | GET | `/mcp/test-mcp` | Demo: call MCP tool and summarize with Gemini |
+
+### Ranking preferences (`POST /cats/rank`)
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `kidsFriendly` | boolean | no | Home has children |
+| `apartmentFriendly` | boolean | no | Lives in an apartment |
+| `energyLevel` | `low` \| `medium` \| `high` | no | Desired activity level |
+| `size` | `small` \| `medium` \| `large` | no | Desired body size |
+| `minLifeSpan` | number (1–40) | no | Minimum life span in years |
+| `lowAggression` | boolean | no | Prefer calm cats |
+| `limit` | number (1–20) | no | How many results (default 5) |
+| `minScore` | number (0–100) | no | Hide cats below this score |
 
 ### Example: create a cat
 
@@ -187,7 +204,7 @@ The MCP server (`mcp_server`) runs over stdio and exposes:
 
 | Tool | Input | Description |
 |---|---|---|
-| `recommend_cats` | `kidsFriendly: boolean`, `apartmentFriendly: boolean` | Returns cats that match the preferences |
+| `recommend_cats` | lifestyle preferences (see below) | Ranks cats and returns match scores, reasons and trade-offs |
 | `get_all_cats` | none | Returns all cats |
 
 ### Use it from an MCP client (example config)
@@ -211,7 +228,7 @@ The backend must be running on port 5000 because the tools fetch data from the A
 MCP client ──callTool("recommend_cats", {...})──► MCP server
                                                      │  validates input with zod
                                                      ▼
-                                        axios POST /api/cats/recommend
+                                        axios POST /api/cats/rank
                                                      │
                                                      ▼
                                           Express API ──► MongoDB
@@ -219,10 +236,11 @@ MCP client ──callTool("recommend_cats", {...})──► MCP server
 MCP client ◄── { content: [{ type: "text", text: JSON }] } ◄──┘
 ```
 
-### Tool reference (implemented)
+### Tool reference
 
 #### `recommend_cats`
-Ranks the saved cats against the user's lifestyle and returns the best matches. Each cat gets a `matchScore` (0-100), the `reasons` it fits and its `tradeOffs`. Send only the preferences the user mentioned (at least one is required). Backed by `POST /api/cats/rank`.
+
+Ranks saved cats against the user's lifestyle and returns the best matches. Each cat gets a `matchScore` (0–100), the `reasons` it fits, and its `tradeOffs`. Send only the preferences the user mentioned (at least one is required). Backed by `POST /api/cats/rank`.
 
 | Input | Type | Required | Description |
 |---|---|---|---|
@@ -230,12 +248,12 @@ Ranks the saved cats against the user's lifestyle and returns the best matches. 
 | `apartmentFriendly` | boolean | no | `true` if the user lives in an apartment |
 | `energyLevel` | `low` / `medium` / `high` | no | Wanted activity level |
 | `size` | `small` / `medium` / `large` | no | Wanted body size |
-| `minLifeSpan` | number (1-40) | no | Minimum life span in years |
+| `minLifeSpan` | number (1–40) | no | Minimum life span in years |
 | `lowAggression` | boolean | no | Prefer calm cats |
-| `limit` | number (1-20) | no | How many cats to return (default 5) |
-| `minScore` | number (0-100) | no | Hide cats scoring below this (default 0) |
+| `limit` | number (1–20) | no | How many cats to return (default 5) |
+| `minScore` | number (0–100) | no | Hide cats scoring below this (default 0) |
 
-How scoring works (only the preferences you send are counted, so the score is always out of 100):
+**Scoring** (only the preferences you send are counted, so the score is always out of 100):
 
 | Preference | Weight | Rule |
 |---|---|---|
@@ -246,9 +264,9 @@ How scoring works (only the preferences you send are counted, so the score is al
 | `minLifeSpan` | 5 | scaled by how close the cat's life span is |
 | `lowAggression` | 5 | full for low aggression, half for medium |
 
-Ties are broken by longer life span. Errors come back with `isError: true` and a readable message (for example "Cannot reach the Cats API ... Is the backend running?").
+Ties are broken by longer life span. Errors come back with `isError: true` and a readable message.
 
-Example call:
+**Example call:**
 
 ```json
 {
@@ -262,7 +280,7 @@ Example call:
 }
 ```
 
-Example result (text content, JSON string):
+**Example result:**
 
 ```json
 {
@@ -292,6 +310,7 @@ Example result (text content, JSON string):
 ```
 
 #### `get_all_cats`
+
 Returns every cat in the database. Takes no input.
 
 ### Planned tools
@@ -300,20 +319,18 @@ Returns every cat in the database. Takes no input.
 |---|---|---|
 | `search_cats` | `query: string`, `limit?: number` | Search by name or breed |
 | `get_cat_by_id` | `id: string` | Return one cat with full details |
-| `filter_cats` | `energyLevel?`, `size?`, `minLifeSpan?`, `kidsFriendly?`, `apartmentFriendly?` | Multi-field filtering |
-| `compare_cats` | `ids: string[]` (2-3) | Side-by-side comparison table |
+| `filter_cats` | multi-field filters | Multi-field filtering |
+| `compare_cats` | `ids: string[]` (2–3) | Side-by-side comparison |
 | `find_similar_cats` | `id: string`, `limit?: number` | Similar cats using embeddings |
 | `create_cat` | cat fields | Add a new cat (admin / API key only) |
-| `update_cat` | `id`, partial cat fields | Edit a cat (admin only) |
+| `update_cat` | `id`, partial fields | Edit a cat (admin only) |
 | `delete_cat` | `id` | Remove a cat (admin only) |
-| `estimate_monthly_cost` | `id: string`, `city?: string` | Estimate food, litter, vet and grooming cost |
-| `get_care_tips` | `breed: string` | Feeding, grooming and health tips (cached) |
+| `estimate_monthly_cost` | `id`, `city?` | Estimate food, litter, vet cost |
+| `get_care_tips` | `breed: string` | Feeding, grooming and health tips |
 | `get_adoption_status` | `requestId: string` | Check an adoption request |
-| `get_cat_stats` | none | Counts by breed, energy level and size |
+| `get_cat_stats` | none | Counts by breed, energy, size |
 
 ### Planned resources
-
-Resources are read-only data the client can load as context.
 
 | URI | Description |
 |---|---|
@@ -323,8 +340,6 @@ Resources are read-only data the client can load as context.
 | `cats://stats` | Summary statistics |
 
 ### Planned prompts
-
-Prompts are reusable templates the user can pick in the client.
 
 | Prompt | Arguments | Purpose |
 |---|---|---|
@@ -339,18 +354,16 @@ cd mcp_server
 npx @modelcontextprotocol/inspector npx tsx src/index.ts
 ```
 
-Open the URL it prints, click **Connect**, then open **Tools** to run `recommend_cats` or `get_all_cats` and see the raw response. Keep the backend running on port 5000 while testing.
+Open the URL it prints, click **Connect**, then open **Tools** to run `recommend_cats` or `get_all_cats`. Keep the backend running on port 5000 while testing.
 
 ### Call the MCP server from the backend
-
-The backend uses the MCP SDK client (`backend/src/services/mcp.service.ts`):
 
 ```ts
 const client = await getMcpClient();
 
-const tools = await client.listTools();          // discover tools
+const tools = await client.listTools();
 
-const result = await client.callTool({           // call one tool
+const result = await client.callTool({
   name: "recommend_cats",
   arguments: { kidsFriendly: true, apartmentFriendly: true },
 });
@@ -358,24 +371,8 @@ const result = await client.callTool({           // call one tool
 
 ### Add a new tool (step by step)
 
-1. Add the function in `mcp_server/src/tools/` (call the API or the database).
-2. Register it in `mcp_server/src/index.ts`:
-
-```ts
-server.registerTool(
-  "get_cat_by_id",
-  {
-    title: "get_cat_by_id",
-    description: "Get one cat by its id",
-    inputSchema: { id: z.string() },
-  },
-  async ({ id }) => {
-    const result = await getCatByIdTool(id);
-    return { content: [{ type: "text", text: JSON.stringify(result) }] };
-  }
-);
-```
-
+1. Add the function in `mcp_server/src/tools/`.
+2. Register it in `mcp_server/src/index.ts` with a clear `description` and zod `inputSchema`.
 3. Restart the server and test it in MCP Inspector.
 4. Add it to the tool table in this README.
 
@@ -386,15 +383,15 @@ server.registerTool(
 | Item | Now | Planned |
 |---|---|---|
 | Transport | stdio (local process) | Streamable HTTP (hosted URL) |
-| Auth | none | API key in an `Authorization` header, keys stored hashed |
+| Auth | none | API key in `Authorization` header |
 | Permissions | all tools open | read tools public, write tools admin-only |
 | Rate limiting | none | per API key |
 | Logging | `console.error` | request log with tool name, duration, key id |
 | Error handling | errors bubble up | return `isError: true` with a clear message |
 
 Notes:
-- With stdio, never write normal logs to stdout (it breaks the protocol). Use `console.error`, as the server already does.
-- Validate every tool input with zod and cap list sizes (`limit` max 50).
+- With stdio, never write normal logs to stdout (it breaks the protocol). Use `console.error`.
+- Validate every tool input with zod and cap list sizes.
 - Never return secrets or internal ids you do not want exposed.
 
 ---
@@ -425,21 +422,21 @@ Cat {
 | Field | Type | Required | Default | Notes |
 |---|---|---|---|---|
 | `_id` | ObjectId | auto | auto | Generated by MongoDB |
-| `name` | String | yes | none | Cat's name |
-| `breed` | String | yes | none | Breed name |
-| `description` | String | yes | none | Short description |
-| `energyLevel` | String | yes | none | The form sends `low`, `medium` or `high` |
-| `lifeSpan` | Number | no | `1` | Years (the form allows 1-40) |
+| `name` | String | yes | — | Cat's name |
+| `breed` | String | yes | — | Breed name |
+| `description` | String | yes | — | Short description |
+| `energyLevel` | String | yes | — | `low`, `medium` or `high` |
+| `lifeSpan` | Number | no | `1` | Years (1–40) |
 | `kidsFriendly` | Boolean | no | `true` | Used by recommendations |
 | `apartmentFriendly` | Boolean | no | `true` | Used by recommendations |
-| `image` | String | no | none | Image URL |
-| `color` | String | no | none | Coat color |
-| `size` | String | no | none | For example small, medium, large |
-| `violenceLevel` | String | no | none | Shown as "Aggression" in the UI |
-| `foodHabits` | String | no | none | Diet notes |
+| `image` | String | no | — | Image URL |
+| `color` | String | no | — | Coat color |
+| `size` | String | no | — | `small`, `medium`, `large` |
+| `violenceLevel` | String | no | — | Shown as "Aggression" in the UI |
+| `foodHabits` | String | no | — | Diet notes |
 | `tailSize` | String | no | `"medium"` | Tail length |
-| `createdAt` | Date | auto | auto | Added by `timestamps: true` |
-| `updatedAt` | Date | auto | auto | Added by `timestamps: true` |
+| `createdAt` | Date | auto | auto | From `timestamps: true` |
+| `updatedAt` | Date | auto | auto | From `timestamps: true` |
 
 ### Example document
 
@@ -470,9 +467,13 @@ Cat {
 |---|---|
 | Make `energyLevel` an enum (`low`, `medium`, `high`) | Prevents inconsistent values |
 | Make `size` an enum (`small`, `medium`, `large`) | Reliable filtering and scoring |
-| Rename `violenceLevel` to `aggressionLevel` | Matches the UI and is clearer |
+| Rename `violenceLevel` → `aggressionLevel` | Clearer name |
 | Add `grooming` (`low`, `medium`, `high`) | Better recommendations |
+| Add `sheddingLevel` (`low`, `medium`, `high`) | Allergy & cleaning concerns |
+| Add `vocalization` (`quiet`, `moderate`, `vocal`) | Noise preference |
 | Add `hypoallergenic` (Boolean) | Allergy-friendly filter |
+| Add `goodWithDogs` / `goodWithOtherCats` (Boolean) | Multi-pet homes |
+| Add `indoorOnly` (Boolean) | Lifestyle / safety |
 | Add `aloneTolerance` (`low`, `medium`, `high`) | For people who work long hours |
 | Add `images: string[]` | Gallery on the detail page |
 | Add `avgRating` and `reviewCount` | Show ratings without extra queries |
@@ -483,8 +484,8 @@ Cat {
 Planned indexes:
 
 ```ts
-catSchema.index({ name: "text", breed: "text", description: "text" }); // text search
-catSchema.index({ kidsFriendly: 1, apartmentFriendly: 1 });            // recommend queries
+catSchema.index({ name: "text", breed: "text", description: "text" });
+catSchema.index({ kidsFriendly: 1, apartmentFriendly: 1 });
 catSchema.index({ breed: 1 });
 catSchema.index({ energyLevel: 1, size: 1 });
 ```
@@ -497,9 +498,9 @@ catSchema.index({ energyLevel: 1, size: 1 });
 |---|---|---|
 | `name` | String | required |
 | `email` | String | required, unique, lowercase |
-| `passwordHash` | String | bcrypt hash, never returned by the API |
-| `role` | `"user"` or `"admin"` | default `"user"` |
-| `favorites` | ObjectId[] (ref Cat) | replaces localStorage favorites |
+| `passwordHash` | String | bcrypt hash (or Clerk-managed) |
+| `role` | `"user"` \| `"admin"` | default `"user"` |
+| `favorites` | ObjectId[] (ref Cat) | replaces localStorage |
 | `createdAt`, `updatedAt` | Date | timestamps |
 
 #### Review
@@ -508,11 +509,11 @@ catSchema.index({ energyLevel: 1, size: 1 });
 |---|---|---|
 | `cat` | ObjectId (ref Cat) | required |
 | `user` | ObjectId (ref User) | required |
-| `rating` | Number | 1-5 |
-| `comment` | String | optional, max length |
+| `rating` | Number | 1–5 |
+| `comment` | String | optional |
 | `createdAt` | Date | timestamp |
 
-Unique index on `{ cat, user }` so each user reviews a cat once.
+Unique index on `{ cat, user }`.
 
 #### AdoptionRequest
 
@@ -522,35 +523,12 @@ Unique index on `{ cat, user }` so each user reviews a cat once.
 | `user` | ObjectId (ref User) | required |
 | `phone` | String | required |
 | `message` | String | optional |
-| `status` | `"pending"`, `"approved"`, `"rejected"` | default `"pending"` |
+| `status` | `"pending"` \| `"approved"` \| `"rejected"` | default `"pending"` |
 | `createdAt`, `updatedAt` | Date | timestamps |
 
-#### ChatSession
+#### ChatSession / ApiKey / CareTip
 
-| Field | Type | Notes |
-|---|---|---|
-| `user` | ObjectId (ref User) | optional for guests |
-| `messages` | `{ role, content, toolCalls? }[]` | chat history |
-| `createdAt`, `updatedAt` | Date | timestamps |
-
-#### ApiKey
-
-| Field | Type | Notes |
-|---|---|---|
-| `user` | ObjectId (ref User) | owner of the key |
-| `name` | String | label, for example "My Cursor" |
-| `keyHash` | String | store only a hash, show the real key once |
-| `lastUsedAt` | Date | usage tracking |
-| `revoked` | Boolean | default `false` |
-| `createdAt` | Date | timestamp |
-
-#### CareTip (cache)
-
-| Field | Type | Notes |
-|---|---|---|
-| `breed` | String | unique |
-| `content` | String | Markdown from Gemini |
-| `createdAt` | Date | refresh when old |
+See earlier design notes for chat history, API keys (hashed), and cached care tips by breed.
 
 ### Relationships
 
@@ -563,11 +541,9 @@ User >──< Cat            (favorites)
 Cat  ──  CareTip         (by breed)
 ```
 
-`──<` means one to many, `>──<` means many to many.
-
 ### TypeScript types
 
-Backend (`backend/src/types/cats.types.ts`) and frontend (`frontend/src/types/cat.ts`) define the Cat type. Keep them in sync:
+Keep backend and frontend Cat types in sync:
 
 ```ts
 export interface Cat {
@@ -592,8 +568,14 @@ export interface Cat {
 export type CatInput = Omit<Cat, "_id" | "createdAt" | "updatedAt">;
 
 export interface Preferences {
-  kidsFriendly: boolean;
-  apartmentFriendly: boolean;
+  kidsFriendly?: boolean;
+  apartmentFriendly?: boolean;
+  energyLevel?: "low" | "medium" | "high";
+  size?: "small" | "medium" | "large";
+  minLifeSpan?: number;
+  lowAggression?: boolean;
+  limit?: number;
+  minScore?: number;
 }
 ```
 
@@ -613,9 +595,10 @@ export interface Preferences {
 
 ## 🛠️ Known Issues / Improvements
 
-- The AI recommendation prompt should include the matched cats from the database.
-- The MCP client should be created once and reused instead of on every request.
+- Expand AI Advisor questionnaire with more lifestyle filters (shedding, grooming, vocalization, hypoallergenic, multi-pet, indoor-only, experience).
+- Keep the MCP client as a singleton instead of creating it on every request.
 - Add input validation, error middleware, rate limiting and tests.
+- Align `violenceLevel` naming with UI (“Aggression”).
 
 ---
 
@@ -626,6 +609,7 @@ Add screenshots here:
 ```
 ![Home](./screenshots/home.png)
 ![AI Advisor](./screenshots/advisor.png)
+![Cat Detail](./screenshots/detail.png)
 ```
 
 ---
