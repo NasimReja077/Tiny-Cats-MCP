@@ -1,0 +1,18 @@
+import type { Document, Types } from "mongoose";
+
+export interface ICattery extends Document {
+  name: string;
+  website?: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  breeds: string[];
+  availableKittens?: string;
+  sourceUrls: string[];
+  confidence: number;
+  notes?: string;
+  foundAt: Date;
+  createdBy?: Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
