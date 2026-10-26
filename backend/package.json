@@ -1,0 +1,47 @@
+{
+  "name": "tiny-cats-backend",
+  "version": "1.0.0",
+  "description": "Tiny Cats — AI breed recommendations using Model Context Protocol (MCP) + full-stack TypeScript.",
+  "keywords": [
+    "MCP",
+    "AI",
+    "full-stack",
+    "TypeScript",
+    "gemini"
+  ],
+  "homepage": "https://github.com/NasimReja077/Tiny-Cats-MCP#readme",
+  "bugs": {
+    "url": "https://github.com/NasimReja077/Tiny-Cats-MCP/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NasimReja077/Tiny-Cats-MCP.git"
+  },
+  "license": "ISC",
+  "author": "Nasim Reja",
+  "type": "module",
+  "main": "src/server.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsx watch src/server.ts"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/mongoose": "^5.11.96",
+    "@types/node": "^26.6.5",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@google/genai": "^2.31.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "helmet": "^8.3.0",
+    "mongoose": "^9.11.4",
+    "morgan": "^1.12.1",
+    "multer": "^2.5.0"
+  }
+}

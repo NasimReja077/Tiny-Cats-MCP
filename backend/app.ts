@@ -1,0 +1,50 @@
+import express, { type Request, type Response, type NextFunction } from "express";
+import cors from "cors";
+import catsRoute from "./routes/cat.routes.ts";
+import aiRoutes from "./routes/ai.routes.ts";
+import aiRecommendRoutes from "./routes/aiRecommend.routes.ts";
+import mcpRoutes from "./routes/test-mcp.routes.ts";
+
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Health / root
+app.get("/", (_req: Request, res: Response) => {
+  res.status(200).json({
+    success: true,
+    message: "Tiny cats backend running...",
+  });
+});
+
+app.get("/health", (_req: Request, res: Response) => {
+  res.status(200).json({ success: true, message: "OK" });
+});
+
+// Routes
+app.use("/api/cats", catsRoute);
+app.use("/api/ai", aiRoutes);
+app.use("/api/aiRecommend", aiRecommendRoutes);
+app.use("/api/mcp", mcpRoutes);
+
+// 404
+app.use((_req: Request, res: Response) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+  });
+});
+
+// Error handler
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.error(err);
+  res.status(500).json({
+    success: false,
+    message: err.message || "Internal server error",
+  });
+});
+
+export default app;
