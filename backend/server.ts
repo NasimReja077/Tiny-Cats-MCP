@@ -1,8 +1,3 @@
-import path from "node:path";
-import dotenv from "dotenv";
-
-dotenv.config({ path: path.resolve(process.cwd(), "src/.env") });
-
 import app from "./app.ts";
 import { connectDB } from "./config/db.ts";
 
