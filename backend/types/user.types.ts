@@ -1,11 +1,11 @@
-import type mongoose from "mongoose";
+import type { Types } from "mongoose";
 
-export interface IUser extends Document {
+export interface IUser {
   name: string;
   email: string;
   passwordHash: string;
   avatar?: string;
-  favorites: mongoose.Types.ObjectId[];
+  favorites: Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }

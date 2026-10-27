@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import type { IAdoptionRequest } from "../types/adoptionRequest.types.ts";
 
 
@@ -38,5 +38,8 @@ const adoptionRequestSchema = new Schema<IAdoptionRequest>(
   }
 );
 
-const AdoptionRequestModel = mongoose.model("adoptionRequest", adoptionRequestSchema);
+const AdoptionRequestModel = mongoose.model<IAdoptionRequest>(
+  "adoptionRequest",
+  adoptionRequestSchema
+);
 export default AdoptionRequestModel;

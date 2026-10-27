@@ -1,8 +1,8 @@
-import type mongoose from "mongoose";
+import type { Types } from "mongoose";
 
-export interface IReview extends Document {
-  cat: mongoose.Types.ObjectId;
-  user: mongoose.Types.ObjectId;
+export interface IReview {
+  cat: Types.ObjectId;
+  user: Types.ObjectId;
   rating: number;
   comment?: string;
   createdAt: Date;

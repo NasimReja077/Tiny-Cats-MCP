@@ -113,9 +113,9 @@ export const getListingController = async (req: Request, res: Response) => {
 export const searchListingsController = async (req: Request, res: Response) => {
   try {
     const data = await searchListingsService({
-      q: req.query.q as string | undefined,
-      city: req.query.city as string | undefined,
-      breed: req.query.breed as string | undefined,
+      ...(typeof req.query.q === "string" ? { q: req.query.q } : {}),
+      ...(typeof req.query.city === "string" ? { city: req.query.city } : {}),
+      ...(typeof req.query.breed === "string" ? { breed: req.query.breed } : {}),
       status: (req.query.status as "approved" | "pending") || "approved",
       limit: req.query.limit ? Number(req.query.limit) : 20,
     });

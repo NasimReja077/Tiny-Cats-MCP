@@ -5,6 +5,7 @@ import {
   getAllCatsService,
   searchCatsService,
   recommendService,
+  rankCatsService,
 } from "../services/cat.service.ts";
 
 export const createCatController = async (req: Request, res: Response) => {
@@ -17,7 +18,7 @@ export const createCatController = async (req: Request, res: Response) => {
   });
 };
 
-export const getAllCatsController = async (req: Request, res: Response) => {
+export const getAllCatsController = async (_req: Request, res: Response) => {
   let result = await getAllCatsService();
 
   return res.status(200).json({
@@ -61,6 +62,16 @@ export const recommendCatsController = async (req: Request, res: Response) => {
   return res.status(200).json({
     success: true,
     message: "Cat fetched",
+    data: result,
+  });
+};
+
+export const rankCatsController = async (req: Request, res: Response) => {
+  const result = await rankCatsService(req.body);
+
+  return res.status(200).json({
+    success: true,
+    message: "Cats ranked",
     data: result,
   });
 };

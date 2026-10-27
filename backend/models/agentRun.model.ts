@@ -39,4 +39,4 @@ const agentRunSchema = new Schema<IAgentRun>(
 );
 
 export const AgentRun: Model<IAgentRun> =
-  mongoose.models.AgentRun || mongoose.model<IAgentRun>("AgentRun", agentRunSchema);
+  mongoose.models.AgentRun ?? mongoose.model<IAgentRun>("AgentRun", agentRunSchema);

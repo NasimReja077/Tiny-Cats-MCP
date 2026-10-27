@@ -1,4 +1,5 @@
-import { Cattery, type ICattery } from "../models/cattery.model.ts";
+import { Cattery } from "../models/cattery.model.ts";
+import type { ICattery } from "../types/cattery.types.ts";
 
 export const saveCatteryService = async (data: Partial<ICattery>) => {
   if (!data.name?.trim()) {

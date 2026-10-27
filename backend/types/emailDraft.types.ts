@@ -1,8 +1,8 @@
-import type { Document, Types } from "mongoose";
+import type { Types } from "mongoose";
 
 export type EmailDraftStatus = "draft" | "sent" | "failed";
 
-export interface IEmailDraft extends Document {
+export interface IEmailDraft {
   user?: Types.ObjectId;
   to: string;
   subject: string;

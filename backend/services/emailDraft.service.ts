@@ -1,4 +1,4 @@
-import { EmailDraft, type IEmailDraft } from "../models/emailDraft.model.ts";
+import { EmailDraft } from "../models/emailDraft.model.ts";
 
 export const createEmailDraftService = async (data: {
   to: string;
@@ -22,9 +22,9 @@ export const createEmailDraftService = async (data: {
     subject: data.subject.trim(),
     body: data.body.trim(),
     status: "draft",
-    user: data.userId,
-    relatedCattery: data.relatedCattery,
-    relatedListing: data.relatedListing,
+    ...(data.userId ? { user: data.userId } : {}),
+    ...(data.relatedCattery ? { relatedCattery: data.relatedCattery } : {}),
+    ...(data.relatedListing ? { relatedListing: data.relatedListing } : {}),
   });
 };
 

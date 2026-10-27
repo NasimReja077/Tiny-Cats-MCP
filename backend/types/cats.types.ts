@@ -1,4 +1,4 @@
-import type mongoose from "mongoose";
+import type { Types } from "mongoose";
 
 export type EnergyLevel = "low" | "medium" | "high";
 export type Size = "small" | "medium" | "large";
@@ -8,7 +8,7 @@ export type SheddingLevel = "low" | "medium" | "high";
 export type Vocalization = "quiet" | "moderate" | "vocal";
 export type AloneTolerance = "low" | "medium" | "high";
 
-export interface ICat extends Document {
+export interface ICat {
   name: string;
   breed: string;
   description: string;
@@ -32,7 +32,7 @@ export interface ICat extends Document {
   aloneTolerance?: AloneTolerance;
   isAvailable?: boolean;
   isDeleted?: boolean;
-  createdBy?: mongoose.Types.ObjectId;
+  createdBy?: Types.ObjectId;
   avgRating?: number;
   reviewCount?: number;
   

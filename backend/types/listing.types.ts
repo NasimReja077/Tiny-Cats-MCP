@@ -1,8 +1,8 @@
-import type { Document, Types } from "mongoose";
+import type { Types } from "mongoose";
 
 export type ListingStatus = "pending" | "approved" | "rejected" | "sold";
 
-export interface IListing extends Document {
+export interface IListing {
   seller?: Types.ObjectId;
   name: string;
   breed: string;

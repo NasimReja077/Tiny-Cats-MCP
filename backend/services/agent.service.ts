@@ -1,6 +1,7 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, type FunctionDeclaration } from "@google/genai";
 import { getMcpClient } from "./mcp.service.ts";
 import { AgentRun } from "../models/agentRun.model.ts";
+import type { IAgentRun } from "../types/agentRun.types.ts";
 import { searchWebService, fetchPageService, findCatteryRawService } from "./web.service.ts";
 import { saveCatteryService } from "./cattery.service.ts";
 import { createEmailDraftService } from "./emailDraft.service.ts";
@@ -65,9 +66,9 @@ async function runLocalTool(
         to: String(args.to || ""),
         subject: String(args.subject || ""),
         body: String(args.body || ""),
-        relatedCattery: args.relatedCattery
-          ? String(args.relatedCattery)
-          : undefined,
+        ...(args.relatedCattery
+          ? { relatedCattery: String(args.relatedCattery) }
+          : {}),
       });
 
     case "create_listing":
@@ -75,10 +76,10 @@ async function runLocalTool(
 
     case "search_listings":
       return searchListingsService({
-        q: args.q ? String(args.q) : undefined,
-        city: args.city ? String(args.city) : undefined,
-        breed: args.breed ? String(args.breed) : undefined,
-        status: args.status as "approved" | undefined,
+        ...(args.q ? { q: String(args.q) } : {}),
+        ...(args.city ? { city: String(args.city) } : {}),
+        ...(args.breed ? { breed: String(args.breed) } : {}),
+        ...(args.status === "approved" ? { status: "approved" } : {}),
         limit: args.limit ? Number(args.limit) : 20,
       });
 
@@ -106,7 +107,7 @@ async function runLocalTool(
   }
 }
 
-const LOCAL_TOOL_DECLARATIONS = [
+const LOCAL_TOOL_DECLARATIONS: FunctionDeclaration[] = [
   {
     name: "search_web",
     description: "Search the public web. Returns titles, URLs and snippets. Requires TAVILY_API_KEY.",
@@ -250,7 +251,7 @@ export async function runAgent(
   const model = process.env.GEMINI_MODEL || "gemini-2.0-flash";
 
   const run = await AgentRun.create({
-    user: userId,
+    ...(userId ? { user: userId } : {}),
     messages: [{ role: "user", content: userText }],
     toolCalls: [],
     status: "running",
@@ -258,7 +259,7 @@ export async function runAgent(
 
   try {
     // Optional: also expose MCP cat tools
-    let mcpToolDecls: typeof LOCAL_TOOL_DECLARATIONS = [];
+    let mcpToolDecls: FunctionDeclaration[] = [];
     try {
       const mcp = await getMcpClient();
       const listed = await mcp.listTools();
@@ -274,7 +275,10 @@ export async function runAgent(
       // MCP optional for agent flows that only need web/DB tools
     }
 
-    const functionDeclarations = [...LOCAL_TOOL_DECLARATIONS, ...mcpToolDecls];
+    const functionDeclarations: FunctionDeclaration[] = [
+      ...LOCAL_TOOL_DECLARATIONS,
+      ...mcpToolDecls,
+    ];
 
     const contents: Array<{
       role: string;

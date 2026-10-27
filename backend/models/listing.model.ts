@@ -58,4 +58,4 @@ listingSchema.index({ name: "text", breed: "text", description: "text", city: "t
 listingSchema.index({ status: 1, city: 1, breed: 1 });
 
 export const Listing: Model<IListing> =
-  mongoose.models.Listing || mongoose.model<IListing>("Listing", listingSchema);
+  mongoose.models.Listing ?? mongoose.model<IListing>("Listing", listingSchema);

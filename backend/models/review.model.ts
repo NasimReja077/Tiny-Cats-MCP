@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import type { IReview } from "../types/review.types.ts";
 
 
@@ -36,6 +36,6 @@ const reviewSchema = new Schema<IReview>(
 // One review per user per cat
 reviewSchema.index({ cat: 1, user: 1 }, { unique: true });
 
-const ReviewModel = mongoose.model("review", reviewSchema);
+const ReviewModel = mongoose.model<IReview>("review", reviewSchema);
 
 export default ReviewModel;

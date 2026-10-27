@@ -45,3 +45,8 @@ export const callMcpTool = async (
   const c = await getMcpClient();
   return c.callTool({ name, arguments: args });
 };
+
+export const listMcpTools = async () => {
+  const c = await getMcpClient();
+  return c.listTools();
+};

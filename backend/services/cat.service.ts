@@ -1,5 +1,5 @@
 import CatModel from "../models/cat.model.ts";
-import type { ICat } from "../models/cat.model.ts";
+import type { ICat } from "../types/cats.types.ts";
 
 // ---------- Create ----------
 export const createCatService = async (payload: Partial<ICat>) => {

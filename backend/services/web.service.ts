@@ -94,7 +94,7 @@ export async function fetchPageService(url: string): Promise<{
 
     return {
       url: safe.toString(),
-      title,
+      ...(title ? { title } : {}),
       text,
       truncated,
     };
@@ -176,7 +176,7 @@ export async function findCatteryRawService(
       const page = await fetchPageService(hit.url);
       pages.push({
         url: page.url,
-        title: page.title,
+        ...(page.title ? { title: page.title } : {}),
         // Label as untrusted data for the model
         text: `[UNTRUSTED WEB CONTENT from ${page.url}]\n${page.text}`,
       });

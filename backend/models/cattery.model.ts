@@ -35,4 +35,4 @@ const catterySchema = new Schema<ICattery>(
 catterySchema.index({ name: "text", location: "text" });
 
 export const Cattery: Model<ICattery> =
-  mongoose.models.Cattery || mongoose.model<ICattery>("Cattery", catterySchema);
+  mongoose.models.Cattery ?? mongoose.model<ICattery>("Cattery", catterySchema);

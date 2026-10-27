@@ -1,10 +1,10 @@
-import type mongoose from "mongoose";
+import type { Types } from "mongoose";
 
 export type AdoptionStatus = "pending" | "approved" | "rejected";
 
-export interface IAdoptionRequest extends Document {
-  cat: mongoose.Types.ObjectId;
-  user: mongoose.Types.ObjectId;
+export interface IAdoptionRequest {
+  cat: Types.ObjectId;
+  user: Types.ObjectId;
   phone: string;
   message?: string;
   status: AdoptionStatus;

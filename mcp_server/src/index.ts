@@ -90,12 +90,18 @@ server.registerTool(
     }
 
     const result = await recommendCatsTool({
-      kidsFriendly: args.kidsFriendly,
-      apartmentFriendly: args.apartmentFriendly,
-      energyLevel: args.energyLevel,
-      size: args.size,
-      minLifeSpan: args.minLifeSpan,
-      lowAggression: args.lowAggression,
+      ...(args.kidsFriendly !== undefined
+        ? { kidsFriendly: args.kidsFriendly }
+        : {}),
+      ...(args.apartmentFriendly !== undefined
+        ? { apartmentFriendly: args.apartmentFriendly }
+        : {}),
+      ...(args.energyLevel !== undefined ? { energyLevel: args.energyLevel } : {}),
+      ...(args.size !== undefined ? { size: args.size } : {}),
+      ...(args.minLifeSpan !== undefined ? { minLifeSpan: args.minLifeSpan } : {}),
+      ...(args.lowAggression !== undefined
+        ? { lowAggression: args.lowAggression }
+        : {}),
       limit: args.limit ?? 5,
       minScore: args.minScore ?? 0,
     });

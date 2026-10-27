@@ -37,5 +37,5 @@ const emailDraftSchema = new Schema<IEmailDraft>(
 );
 
 export const EmailDraft: Model<IEmailDraft> =
-  mongoose.models.EmailDraft ||
+  mongoose.models.EmailDraft ??
   mongoose.model<IEmailDraft>("EmailDraft", emailDraftSchema);

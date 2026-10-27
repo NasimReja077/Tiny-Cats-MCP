@@ -1,4 +1,5 @@
-import { Listing, type IListing, type ListingStatus } from "../models/listing.model.ts";
+import { Listing } from "../models/listing.model.ts";
+import type { IListing, ListingStatus } from "../types/listing.types.ts";
 
 export const createListingService = async (data: Partial<IListing>) => {
   if (!data.name?.trim()) throw new Error("Cat name is required");

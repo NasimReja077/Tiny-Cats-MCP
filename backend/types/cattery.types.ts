@@ -1,6 +1,6 @@
-import type { Document, Types } from "mongoose";
+import type { Types } from "mongoose";
 
-export interface ICattery extends Document {
+export interface ICattery {
   name: string;
   website?: string;
   email?: string;

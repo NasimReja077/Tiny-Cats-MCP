@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { getMcpClient, callMcpTool, listMcpTools } from "../services/mcp.service.ts";
+import { callMcpTool, listMcpTools } from "../services/mcp.service.ts";
 import { generateAiResponse } from "../services/gemini.service.ts";
 
 /**
@@ -10,9 +10,15 @@ export const testMcpController = async (req: Request, res: Response) => {
   try {
     // Optional overrides from query or body
     const kidsFriendly =
-      req.body?.kidsFriendly ?? req.query?.kidsFriendly === "true" ?? true;
+      req.body?.kidsFriendly ??
+      (req.query?.kidsFriendly === undefined
+        ? true
+        : req.query.kidsFriendly === "true");
     const apartmentFriendly =
-      req.body?.apartmentFriendly ?? req.query?.apartmentFriendly === "true" ?? true;
+      req.body?.apartmentFriendly ??
+      (req.query?.apartmentFriendly === undefined
+        ? true
+        : req.query.apartmentFriendly === "true");
 
     // 1. List tools (debug)
     const tools = await listMcpTools();

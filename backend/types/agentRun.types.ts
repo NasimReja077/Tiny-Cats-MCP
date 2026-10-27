@@ -1,4 +1,4 @@
-import type { Document, Types } from "mongoose";
+import type { Types } from "mongoose";
 
 export interface IToolCall {
   name: string;
@@ -13,7 +13,7 @@ export interface IAgentMessage {
   toolCalls?: IToolCall[];
 }
 
-export interface IAgentRun extends Document {
+export interface IAgentRun {
   user?: Types.ObjectId;
   messages: IAgentMessage[];
   toolCalls: IToolCall[];

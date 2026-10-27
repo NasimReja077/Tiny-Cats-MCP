@@ -20,10 +20,11 @@
   "license": "ISC",
   "author": "Nasim Reja",
   "type": "module",
-  "main": "src/server.ts",
+  "main": "server.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "tsx watch src/server.ts"
+    "dev": "tsx watch server.ts",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
