@@ -119,15 +119,19 @@ cd ../mcp_server && npm install
 
 ### 2. Environment variables
 
-Create `backend/.env` (or `backend/src/.env`):
+Create `backend/.env`:
 
 ```env
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/tiny-cats
 GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-3.8-flash
+CLERK_SECRET_KEY=your_clerk_secret_key
+IMAGEKIT_PRIVATE_KEY=your_imagekit_private_key
 ```
 
 > Never commit your `.env` file. Keep it in `.gitignore`.
+> `GEMINI_MODEL` is optional; the backend defaults to `gemini-3.8-flash`.
 
 ### 3. Run the project
 
@@ -163,9 +167,17 @@ Base URL: `http://localhost:5000/api`
 | GET | `/cats/search/all?q=` | Search by name or breed |
 | POST | `/cats/recommend` | Exact match on `{ kidsFriendly, apartmentFriendly }` |
 | POST | `/cats/rank` | Score-based ranking with multiple preferences |
+| PATCH | `/cats/:id/image` | Authenticated cat image update (`image` file field) |
+| PATCH | `/profile` | Authenticated Clerk profile update (`name` and/or `image` file field) |
 | POST | `/ai/ask` | Send a prompt to Gemini `{ prompt }` |
 | POST | `/aiRecommend/recommendByAi` | AI breed recommendation |
 | GET | `/mcp/test-mcp` | Demo: call MCP tool and summarize with Gemini |
+
+`PATCH /profile` and `PATCH /cats/:id/image` require a Clerk session token in the
+`Authorization: Bearer <token>` header and accept `multipart/form-data`. Cat image
+updates use the `image` file field. Profile updates accept `image` or `avatar` and
+an optional `name` field, and update the Clerk user directly, so a separate MongoDB
+user profile is not needed.
 
 ### Ranking preferences (`POST /cats/rank`)
 
