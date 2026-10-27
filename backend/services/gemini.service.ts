@@ -21,7 +21,7 @@ const ai = new GoogleGenAI({
 
 export async function generateAiResponse(prompt: string): Promise<string> {
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash", // stable model name
+    model: process.env.GEMINI_MODEL?.trim() || "gemini-3.8-flash",
     contents: prompt,
   });
 

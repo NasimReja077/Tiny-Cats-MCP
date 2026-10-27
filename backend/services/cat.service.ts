@@ -16,6 +16,14 @@ export const getSingleCatService = async (id: string) => {
   return await CatModel.findById(id);
 };
 
+export const updateCatImageService = async (id: string, image: string) => {
+  return await CatModel.findByIdAndUpdate(
+    id,
+    { image },
+    { new: true, runValidators: true },
+  );
+};
+
 // ---------- Search ----------
 export const searchCatsService = async (query: string) => {
   return await CatModel.find({

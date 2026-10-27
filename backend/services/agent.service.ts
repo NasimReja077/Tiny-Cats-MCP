@@ -248,7 +248,7 @@ export async function runAgent(
   userId?: string
 ) {
   const ai = getGemini();
-  const model = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+  const model = process.env.GEMINI_MODEL?.trim() || "gemini-3.8-flash";
 
   const run = await AgentRun.create({
     ...(userId ? { user: userId } : {}),
