@@ -6,7 +6,10 @@ import {
   recommendCatsController,
   rankCatsController,
   searchCatController,
+  updateCatImageController,
 } from "../controller/cat.controller.ts";
+import { requireClerkAuth } from "../middlewares/auth.middleware.ts";
+import { uploadCatImage } from "../middlewares/upload.middleware.ts";
 
 const router = express.Router();
 
@@ -21,6 +24,14 @@ router.post("/recommend", recommendCatsController);
 
 // Score-based ranking
 router.post("/rank", rankCatsController);
+
+// Update a cat's image
+router.patch(
+  "/:id/image",
+  requireClerkAuth,
+  uploadCatImage,
+  updateCatImageController,
+);
 
 // List all
 router.get("/", getAllCatsController);
