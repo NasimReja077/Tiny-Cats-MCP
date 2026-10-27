@@ -2,22 +2,16 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const MONGODB_URI = process.env.MONGODB_URI;
-
-if (!MONGODB_URI) {
-    throw new Error("MONGODB_URI is not defined in environment variables");
-}
-
-// if (!process.env.IMAGEKIT_PRIVATE_KEY){
-//      throw new Error("IMAGEKIT_PRIVATE_KEY is not defined in environment variables")
-// }
-
+const requiredEnv = (name: string): string => {
+    const value = process.env[name];
+    if (!value) {
+        throw new Error(`${name} is not defined in environment variables`);
+    }
+    return value;
+};
 
 export const config = {
-    MONGODB_URI,
-    //  JWT_SECRET: process.env.JWT_SECRET,
-    //  JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
-    //  IMAGEKIT_PRIVATE_KEY: process.env.IMAGEKIT_PRIVATE_KEY,
-    //  NODE_ENV: process.env.NODE_ENV || "development",
-    
+    MONGODB_URI: requiredEnv("MONGODB_URI"),
+    CLERK_SECRET_KEY: requiredEnv("CLERK_SECRET_KEY"),
+    IMAGEKIT_PRIVATE_KEY: requiredEnv("IMAGEKIT_PRIVATE_KEY"),
 };
