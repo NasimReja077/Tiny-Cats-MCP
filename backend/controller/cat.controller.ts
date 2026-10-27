@@ -1,4 +1,6 @@
 import type { Request, Response } from "express";
+import mongoose from "mongoose";
+import { uploadCatImage } from "../services/storage.service.ts";
 import {
   getSingleCatService,
   createCatService,
@@ -6,6 +8,7 @@ import {
   searchCatsService,
   recommendService,
   rankCatsService,
+  updateCatImageService,
 } from "../services/cat.service.ts";
 
 export const createCatController = async (req: Request, res: Response) => {
@@ -73,5 +76,29 @@ export const rankCatsController = async (req: Request, res: Response) => {
     success: true,
     message: "Cats ranked",
     data: result,
+  });
+};
+
+export const updateCatImageController = async (req: Request, res: Response) => {
+  const id = req.params.id as string;
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ success: false, message: "Invalid cat ID" });
+  }
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: "Image file is required" });
+  }
+
+  const cat = await getSingleCatService(id);
+  if (!cat) {
+    return res.status(404).json({ success: false, message: "Cat not found" });
+  }
+
+  const uploadedImage = await uploadCatImage(req.file.buffer, req.file.originalname);
+  const updatedCat = await updateCatImageService(id, uploadedImage.url);
+
+  return res.status(200).json({
+    success: true,
+    message: "Cat image updated",
+    data: updatedCat,
   });
 };
