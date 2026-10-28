@@ -5,6 +5,8 @@ import aiRoutes from "./routes/ai.routes.ts";
 import aiRecommendRoutes from "./routes/aiRecommend.routes.ts";
 import mcpRoutes from "./routes/test-mcp.routes.ts";
 import profileRoutes from "./routes/profile.routes.ts";
+import agentRoutes from "./routes/agent.routes.ts";
+import favoriteRoutes from "./routes/favorite.routes.ts";
 import { clerkMiddleware } from "@clerk/express";
 import multer from "multer";
 
@@ -34,6 +36,8 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/aiRecommend", aiRecommendRoutes);
 app.use("/api/mcp", mcpRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/favorites", favoriteRoutes);
+app.use("/api/agent", agentRoutes);
 
 // 404
 app.use((_req: Request, res: Response) => {
