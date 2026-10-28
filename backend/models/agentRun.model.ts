@@ -4,6 +4,7 @@ import type { IAgentRun } from "../types/agentRun.types.ts";
 const agentRunSchema = new Schema<IAgentRun>(
   {
     user: { type: Schema.Types.ObjectId, ref: "User" },
+    clerkUserId: { type: String, index: true },
     messages: [
       {
         role: { type: String, enum: ["user", "assistant", "tool"], required: true },
