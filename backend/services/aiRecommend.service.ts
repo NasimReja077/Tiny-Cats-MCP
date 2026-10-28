@@ -1,10 +1,10 @@
 import { rankCatsService, type RankPreferences } from "./cat.service.ts";
-import { generateAiResponse } from "./gemini.service.ts";
+import { generateAiResponse } from "./groq.service.ts";
 
 /**
  * AI Breed Advisor
  * 1. Rank cats from the database using score-based matching
- * 2. Send the ranked results + user preferences to Gemini
+ * 2. Send the ranked results + user preferences to Groq
  * 3. Return both the ranked data and the AI-written recommendation
  */
 export const aiRecommendService = async (prefs: RankPreferences) => {
@@ -136,7 +136,7 @@ If the list was empty:
 Explain that nothing scored well enough, list which filters were strictest, and suggest 1–2 filters the user could relax.
 `;
 
-  // ── 4. Call Gemini ────────────────────────────────────────────────
+  // ── 4. Call Groq ──────────────────────────────────────────────────
   const aiResponse = await generateAiResponse(prompt);
 
   return {

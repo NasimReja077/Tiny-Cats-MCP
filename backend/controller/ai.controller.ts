@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { generateAiResponse } from "../services/gemini.service.ts";
+import { generateAiResponse } from "../services/groq.service.ts";
 
 /**
  * POST /api/ai/ask
@@ -9,10 +9,15 @@ export const askAiController = async (req: Request, res: Response) => {
   try {
     const prompt = req.body.prompt;
 
-    if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
+    if (
+      !prompt ||
+      typeof prompt !== "string" ||
+      !prompt.trim() ||
+      prompt.length > 4000
+    ) {
       return res.status(400).json({
         success: false,
-        message: "prompt is required and must be a non-empty string",
+        message: "prompt is required and must be 1–4000 characters",
       });
     }
 

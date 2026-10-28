@@ -1,4 +1,5 @@
 import express from "express";
+import { requireClerkAuth } from "../middlewares/auth.middleware.ts";
 import {
   agentChatController,
   getCatteryController,
@@ -17,7 +18,7 @@ const router = express.Router();
 
 // Agent chat
 // POST /api/agent/chat  { message, history? }
-router.post("/chat", agentChatController);
+router.post("/chat", requireClerkAuth, agentChatController);
 
 // Catteries
 // GET /api/agent/catteries?q=
@@ -31,10 +32,10 @@ router.get("/catteries/:id", getCatteryController);
 // GET  /api/agent/listings/:id
 // PATCH /api/agent/listings/:id/status  { status }
 // POST /api/agent/listings/:id/external-post  { platform }
-router.post("/listings", createListingController);
+router.post("/listings", requireClerkAuth, createListingController);
 router.get("/listings", searchListingsController);
 router.get("/listings/:id", getListingController);
-router.patch("/listings/:id/status", updateListingStatusController);
+router.patch("/listings/:id/status", requireClerkAuth, updateListingStatusController);
 router.post("/listings/:id/external-post", generatePostController);
 
 // Email drafts (agent creates draft; user sends)
@@ -43,6 +44,6 @@ router.post("/listings/:id/external-post", generatePostController);
 // POST /api/agent/emails/:id/send
 router.get("/emails", listEmailDraftsController);
 router.get("/emails/:id", getEmailDraftController);
-router.post("/emails/:id/send", sendEmailDraftController);
+router.post("/emails/:id/send", requireClerkAuth, sendEmailDraftController);
 
 export default router;

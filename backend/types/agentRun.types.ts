@@ -15,6 +15,7 @@ export interface IAgentMessage {
 
 export interface IAgentRun {
   user?: Types.ObjectId;
+  clerkUserId?: string;
   messages: IAgentMessage[];
   toolCalls: IToolCall[];
   finalAnswer?: string;

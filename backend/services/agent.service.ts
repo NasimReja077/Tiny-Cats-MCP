@@ -1,7 +1,14 @@
-import { GoogleGenAI, type FunctionDeclaration } from "@google/genai";
+import { ChatGroq } from "@langchain/groq";
+import {
+  AIMessage,
+  HumanMessage,
+  SystemMessage,
+  ToolMessage,
+  type BaseMessage,
+} from "@langchain/core/messages";
 import { getMcpClient } from "./mcp.service.ts";
+import { getGroqModelId } from "../config/groq.ts";
 import { AgentRun } from "../models/agentRun.model.ts";
-import type { IAgentRun } from "../types/agentRun.types.ts";
 import { searchWebService, fetchPageService, findCatteryRawService } from "./web.service.ts";
 import { saveCatteryService } from "./cattery.service.ts";
 import { createEmailDraftService } from "./emailDraft.service.ts";
@@ -12,7 +19,7 @@ import {
   searchListingsService,
 } from "./listing.service.ts";
 
-const SYSTEM = `You are the Tiny Cats assistant — a helpful agent for finding catteries and listing cats for sale.
+const SYSTEM = `You are the Tiny Cats assistant — a helpful agent for cat care, adoption, finding catteries, and listing cats for sale.
 
 Rules:
 - Use tools to find real information. NEVER invent emails, phone numbers, prices, or websites.
@@ -29,13 +36,6 @@ type HistoryItem = {
   role: "user" | "assistant";
   text: string;
 };
-
-function getGemini() {
-  const key =
-    process.env.GEMINI_API_KEY?.trim() || process.env.GOOGLE_API_KEY?.trim();
-  if (!key) throw new Error("Missing GEMINI_API_KEY");
-  return new GoogleGenAI({ apiKey: key });
-}
 
 /**
  * Local tool implementations the agent can call without MCP
@@ -107,7 +107,13 @@ async function runLocalTool(
   }
 }
 
-const LOCAL_TOOL_DECLARATIONS: FunctionDeclaration[] = [
+interface AgentToolDeclaration {
+  name: string;
+  description: string;
+  parametersJsonSchema: Record<string, unknown>;
+}
+
+const LOCAL_TOOL_DECLARATIONS: AgentToolDeclaration[] = [
   {
     name: "search_web",
     description: "Search the public web. Returns titles, URLs and snippets. Requires TAVILY_API_KEY.",
@@ -247,83 +253,94 @@ export async function runAgent(
   userText: string,
   userId?: string
 ) {
-  const ai = getGemini();
-  const model = process.env.GEMINI_MODEL?.trim() || "gemini-3.8-flash";
+  const apiKey = process.env.GROQ_API_KEY?.trim();
+  if (!apiKey) throw new Error("Missing GROQ_API_KEY. Add it to backend/.env.");
+
+  const model = new ChatGroq({
+    apiKey,
+    model: getGroqModelId(),
+    temperature: 0.2,
+  });
 
   const run = await AgentRun.create({
-    ...(userId ? { user: userId } : {}),
+    ...(userId ? { clerkUserId: userId } : {}),
     messages: [{ role: "user", content: userText }],
     toolCalls: [],
     status: "running",
   });
 
   try {
-    // Optional: also expose MCP cat tools
-    let mcpToolDecls: FunctionDeclaration[] = [];
+    let mcpToolDecls: AgentToolDeclaration[] = [];
     try {
       const mcp = await getMcpClient();
       const listed = await mcp.listTools();
       mcpToolDecls = (listed.tools || []).map((t) => ({
         name: t.name,
         description: t.description || t.name,
-        parametersJsonSchema: (t as { inputSchema?: object }).inputSchema || {
+        parametersJsonSchema: (t.inputSchema as Record<string, unknown> | undefined) || {
           type: "object",
           properties: {},
         },
       }));
-    } catch {
-      // MCP optional for agent flows that only need web/DB tools
+    } catch (error) {
+      console.warn(
+        "MCP tools unavailable for this agent turn:",
+        error instanceof Error ? error.message : error,
+      );
     }
 
-    const functionDeclarations: FunctionDeclaration[] = [
+    const functionDeclarations: AgentToolDeclaration[] = [
       ...LOCAL_TOOL_DECLARATIONS,
       ...mcpToolDecls,
     ];
 
-    const contents: Array<{
-      role: string;
-      parts: Array<Record<string, unknown>>;
-    }> = [
-      ...history.map((h) => ({
-        role: h.role === "assistant" ? "model" : "user",
-        parts: [{ text: h.text }],
-      })),
-      { role: "user", parts: [{ text: userText }] },
+    const messages: BaseMessage[] = [
+      new SystemMessage(SYSTEM),
+      ...history.slice(-12).map((item) =>
+        item.role === "assistant"
+          ? new AIMessage(item.text.slice(0, 4000))
+          : new HumanMessage(item.text.slice(0, 4000)),
+      ),
+      new HumanMessage(userText),
     ];
+    const boundModel = model.bindTools(
+      functionDeclarations.map((declaration) => ({
+        type: "function" as const,
+        function: {
+          name: declaration.name,
+          description: declaration.description,
+          parameters: declaration.parametersJsonSchema,
+        },
+      })),
+    );
 
     let finalText = "";
 
     for (let step = 0; step < MAX_STEPS; step++) {
-      const res = await ai.models.generateContent({
-        model,
-        contents,
-        config: {
-          systemInstruction: SYSTEM,
-          tools: [{ functionDeclarations }],
-        },
-      });
-
-      const calls = res.functionCalls;
+      const response = await boundModel.invoke(messages);
+      messages.push(response);
+      const calls = response.tool_calls ?? [];
 
       if (!calls?.length) {
-        finalText = res.text ?? "";
+        finalText =
+          typeof response.content === "string"
+            ? response.content
+            : response.content
+                .map((part) => ("text" in part ? part.text : ""))
+                .join("");
         break;
       }
 
-      // Push model turn
-      const candidate = res.candidates?.[0]?.content;
-      if (candidate) {
-        contents.push(candidate as (typeof contents)[0]);
-      }
-
       for (const call of calls) {
-        const name = call.name || "";
-        const args = (call.args || {}) as Record<string, unknown>;
+        const name = call.name;
+        const args =
+          typeof call.args === "object" && call.args !== null
+            ? (call.args as Record<string, unknown>)
+            : {};
         const started = Date.now();
 
         let toolResult: unknown;
         try {
-          // Prefer local tools; fall back to MCP
           const isLocal = LOCAL_TOOL_DECLARATIONS.some((t) => t.name === name);
           if (isLocal) {
             toolResult = await runLocalTool(name, args);
@@ -341,7 +358,7 @@ export async function runAgent(
         const summary =
           typeof toolResult === "string"
             ? toolResult.slice(0, 300)
-            : JSON.stringify(toolResult).slice(0, 300);
+            : JSON.stringify(toolResult ?? null).slice(0, 300);
 
         run.toolCalls.push({
           name,
@@ -350,23 +367,17 @@ export async function runAgent(
           durationMs,
         });
 
-        contents.push({
-          role: "user",
-          parts: [
-            {
-              functionResponse: {
-                name,
-                response: { result: toolResult },
-              },
-            },
-          ],
-        });
+        messages.push(
+          new ToolMessage({
+            content: JSON.stringify(toolResult ?? null),
+            tool_call_id: call.id ?? `${name}-${step}`,
+          }),
+        );
       }
     }
 
     if (!finalText) {
-      finalText =
-        "I could not finish this in time. Please try a more specific request.";
+      finalText = "I could not finish this in time. Please try a more specific request.";
       run.status = "timeout";
     } else {
       run.status = "completed";

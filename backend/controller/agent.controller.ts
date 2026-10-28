@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { getAuth } from "@clerk/express";
 import { runAgent } from "../services/agent.service.ts";
 import {
   getCatteryByIdService,
@@ -23,10 +24,15 @@ export const agentChatController = async (req: Request, res: Response) => {
   try {
     const { message, history = [] } = req.body;
 
-    if (!message || typeof message !== "string" || !message.trim()) {
+    if (
+      !message ||
+      typeof message !== "string" ||
+      !message.trim() ||
+      message.length > 4000
+    ) {
       return res.status(400).json({
         success: false,
-        message: "message is required",
+        message: "message is required and must be 1–4000 characters",
       });
     }
 
@@ -43,7 +49,12 @@ export const agentChatController = async (req: Request, res: Response) => {
           }))
       : [];
 
-    const result = await runAgent(safeHistory, message.trim());
+    const { userId } = getAuth(req);
+    const result = await runAgent(
+      safeHistory,
+      message.trim(),
+      userId ?? undefined,
+    );
 
     return res.status(200).json({
       success: true,
