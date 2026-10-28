@@ -1,0 +1,116 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-body-md: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-headline-sm: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-headline-md: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-headline-lg: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-headline-xl: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+
+  /* Ember & Whiskers palette */
+  --color-background: #161310;
+  --color-surface: #161310;
+  --color-surface-dim: #161310;
+  --color-surface-bright: #3c3835;
+  --color-surface-container-lowest: #100e0b;
+  --color-surface-container-low: #1e1b18;
+  --color-surface-container: #221f1c;
+  --color-surface-container-high: #2d2926;
+  --color-surface-container-highest: #383431;
+  --color-surface-variant: #383431;
+  --color-on-surface: #e9e1dc;
+  --color-on-surface-variant: #dcc1b5;
+  --color-inverse-surface: #e9e1dc;
+  --color-inverse-on-surface: #33302c;
+  --color-outline: #a48c81;
+  --color-outline-variant: #56433a;
+
+  --color-primary: #ffb693;
+  --color-on-primary: #561f00;
+  --color-primary-container: #ef8148;
+  --color-on-primary-container: #5f2300;
+  --color-primary-fixed: #ffdbcc;
+  --color-primary-fixed-dim: #ffb693;
+
+  --color-secondary: #82d8a6;
+  --color-on-secondary: #003921;
+  --color-secondary-container: #006a41;
+  --color-on-secondary-container: #90e7b3;
+  --color-secondary-fixed: #9ef5c0;
+  --color-secondary-fixed-dim: #82d8a6;
+
+  --color-tertiary: #f0c04d;
+  --color-on-tertiary: #3f2e00;
+  --color-tertiary-container: #c59827;
+  --color-on-tertiary-container: #463300;
+  --color-tertiary-fixed: #ffdf9d;
+
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+}
+
+:root {
+  color-scheme: dark;
+  --background: #161310;
+  --foreground: #e9e1dc;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #161310;
+  color: #e9e1dc;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #161310;
+}
+::-webkit-scrollbar-thumb {
+  background: #383431;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #56433a;
+}
+
+/* Material symbol support */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Pulse animation for favorite heart */
+@keyframes heart-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+.animate-heart {
+  animation: heart-pulse 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
