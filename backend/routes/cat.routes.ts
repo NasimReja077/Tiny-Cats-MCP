@@ -1,6 +1,7 @@
 import express from "express";
 import {
   createCatController,
+  deleteCatController,
   getAllCatsController,
   getSingleCatController,
   recommendCatsController,
@@ -14,7 +15,7 @@ import { uploadCatImage } from "../middlewares/upload.middleware.ts";
 const router = express.Router();
 
 // Create
-router.post("/create", createCatController);
+router.post("/create", requireClerkAuth, uploadCatImage, createCatController);
 
 // Search (must be before /:id)
 router.get("/search/all", searchCatController);
@@ -32,6 +33,8 @@ router.patch(
   uploadCatImage,
   updateCatImageController,
 );
+
+router.delete("/:id", requireClerkAuth, deleteCatController);
 
 // List all
 router.get("/", getAllCatsController);
