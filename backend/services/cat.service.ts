@@ -6,14 +6,22 @@ export const createCatService = async (payload: Partial<ICat>) => {
   return await CatModel.create(payload);
 };
 
+export const deleteCatService = async (id: string, clerkUserId: string) => {
+  return await CatModel.findOneAndUpdate(
+    { _id: id, createdByClerkId: clerkUserId, isDeleted: { $ne: true } },
+    { isDeleted: true, isAvailable: false },
+    { new: true },
+  );
+};
+
 // ---------- Get all ----------
 export const getAllCatsService = async () => {
-  return await CatModel.find().sort({ createdAt: -1 });
+  return await CatModel.find({ isDeleted: { $ne: true } }).sort({ createdAt: -1 });
 };
 
 // ---------- Get one ----------
 export const getSingleCatService = async (id: string) => {
-  return await CatModel.findById(id);
+  return await CatModel.findOne({ _id: id, isDeleted: { $ne: true } });
 };
 
 export const updateCatImageService = async (id: string, image: string) => {
@@ -27,6 +35,7 @@ export const updateCatImageService = async (id: string, image: string) => {
 // ---------- Search ----------
 export const searchCatsService = async (query: string) => {
   return await CatModel.find({
+    isDeleted: { $ne: true },
     $or: [
       { name: { $regex: query, $options: "i" } },
       { breed: { $regex: query, $options: "i" } },
@@ -39,7 +48,11 @@ export const recommendService = async (
   kidsFriendly: boolean,
   apartmentFriendly: boolean
 ) => {
-  return await CatModel.find({ kidsFriendly, apartmentFriendly });
+  return await CatModel.find({
+    kidsFriendly,
+    apartmentFriendly,
+    isDeleted: { $ne: true },
+  });
 };
 
 // ---------- Preferences type ----------
@@ -70,7 +83,7 @@ export const rankCatsService = async (prefs: RankPreferences) => {
     minScore = 0,
   } = prefs;
 
-  const cats = await CatModel.find();
+  const cats = await CatModel.find({ isDeleted: { $ne: true } });
   if (!cats.length) {
     return {
       evaluated: 0,
