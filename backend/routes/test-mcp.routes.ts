@@ -7,7 +7,7 @@ import {
 
 const router = express.Router();
 
-// GET  /api/mcp/test-mcp   — demo: call tool + Gemini summary
+// GET  /api/mcp/test-mcp   — demo: call tool + Groq summary
 router.get("/test-mcp", testMcpController);
 
 // GET  /api/mcp/tools      — list available MCP tools
