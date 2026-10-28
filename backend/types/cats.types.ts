@@ -33,6 +33,7 @@ export interface ICat {
   isAvailable?: boolean;
   isDeleted?: boolean;
   createdBy?: Types.ObjectId;
+  createdByClerkId?: string;
   avgRating?: number;
   reviewCount?: number;
   
