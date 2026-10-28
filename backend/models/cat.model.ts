@@ -118,6 +118,10 @@ const catSchema = new mongoose.Schema<ICat>(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    createdByClerkId: {
+      type: String,
+      index: true,
+    },
     avgRating: {
       type: Number,
       default: 0,
