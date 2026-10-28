@@ -2,9 +2,9 @@
 
 **AI-powered cat breed recommendations with Model Context Protocol (MCP).**
 
-A full-stack cat breed explorer with an **AI Advisor** (Google Gemini) and a custom **MCP server**. Browse cats, filter them, save favorites, add new cats, and get scored breed recommendations based on your lifestyle.
+A full-stack cat explorer with a Groq-powered **AI Advisor and Socket.IO agent**, Clerk authentication, ImageKit photo uploads, and a custom **MCP server**. Browse cats, save account-specific favorites, add and manage cats, and get scored recommendations based on your lifestyle.
 
-> Built with React, Redux Toolkit, Express, MongoDB, TypeScript, Gemini and MCP.
+> Built with React, Redux Toolkit, Express, MongoDB, TypeScript, Clerk, Groq, Socket.IO, ImageKit and MCP.
 
 ---
 
@@ -13,21 +13,23 @@ A full-stack cat breed explorer with an **AI Advisor** (Google Gemini) and a cus
 ### Available now
 - 🔎 Browse all cats with search (name / breed) and filters
 - 🐈 Cat detail page with full facts (energy, lifespan, size, color, tail, food habits, aggression)
-- ➕ Add a new cat with a form
-- ❤️ Favorites saved in the browser (localStorage) with a live counter in the navbar
-- 🤖 **AI Advisor**: multi-preference questionnaire → ranked cats from the database + Gemini-written breed breakdown (Markdown)
+- 🔐 Clerk sign-in protects account actions and AI features
+- ➕ Add and delete cats you own, with an optional uploaded image
+- ❤️ Favorites saved per Clerk account with a live counter in the navbar
+- 🤖 **AI Advisor**: multi-preference questionnaire → ranked cats from the database + Groq-written breed breakdown (Markdown)
+- 💬 Authenticated Socket.IO AI agent with Groq and MCP/web/database tools
 - 🧩 **MCP server** exposing cat tools (`recommend_cats`, `get_all_cats`) that an AI client can call
 - 🌗 Automatic dark / light theme
 - 📊 Score-based recommendations with match percentage, reasons and trade-offs
 
 ### Roadmap
-- [ ] AI chat assistant using MCP tool calling (the model decides which tool to use)
+- [x] AI chat assistant using MCP tool calling (the model decides which tool to use)
 - [x] Score-based recommendations (match percentage) with more preferences
 - [ ] Expanded lifestyle filters (shedding, grooming, vocalization, hypoallergenic, good with dogs/cats, indoor-only, experience level)
 - [ ] Compare 2–3 cats side by side
 - [ ] Server-side search, filters and pagination
-- [ ] User accounts (Clerk or JWT), roles (user / admin), favorites saved per user
-- [ ] Edit / delete cats and image upload (Cloudinary)
+- [x] Clerk accounts and server-persisted per-user favorites
+- [x] Delete owned cats and upload cat photos through ImageKit
 - [ ] Adoption requests and reviews / ratings
 - [ ] Semantic search with embeddings
 - [ ] More MCP tools, resources and prompts, Streamable HTTP + API key auth
@@ -42,7 +44,10 @@ A full-stack cat breed explorer with an **AI Advisor** (Google Gemini) and a cus
 | **Frontend** | React 19, TypeScript, Vite, React Router, Redux Toolkit + RTK Query, react-markdown, plain CSS (CSS variables) |
 | **Backend** | Node.js, Express 5, TypeScript, Mongoose, dotenv, tsx |
 | **Database** | MongoDB |
-| **AI** | Google Gemini via `@google/genai` |
+| **Authentication** | Clerk |
+| **AI** | Groq via `@langchain/groq` |
+| **Realtime** | Socket.IO |
+| **Image storage** | ImageKit |
 | **MCP** | `@modelcontextprotocol/sdk` (server + client over stdio), zod, axios |
 | **Tooling** | ESLint, TypeScript strict mode |
 
@@ -55,7 +60,7 @@ A full-stack cat breed explorer with an **AI Advisor** (Google Gemini) and a cus
 │  React app │ ────────► │ Express API  │ ─────► │ MongoDB  │
 │  (Vite)    │           │ (backend)    │        └──────────┘
 └────────────┘           │              │
-                         │  Gemini      │ ◄──► Google Gemini API
+                         │  Groq         │ ◄──► Groq API
                          │  service     │
                          │              │ ◄──► MCP client ◄──stdio──► MCP server
                          └──────────────┘                              │
@@ -64,7 +69,8 @@ A full-stack cat breed explorer with an **AI Advisor** (Google Gemini) and a cus
 ```
 
 - The frontend talks only to the Express API (Vite proxies `/api` to port 5000).
-- The Express API reads/writes MongoDB and calls Gemini.
+- The Express API reads/writes MongoDB, uploads images to ImageKit, and calls Groq.
+- Socket.IO authenticates Clerk session tokens before accepting agent messages.
 - The MCP client in the backend starts the MCP server and calls its tools.
 - The MCP server exposes cat tools and fetches data from the Express API.
 
@@ -80,7 +86,7 @@ tiny-cats-mcp/
 │       ├── controller/    # Request handlers
 │       ├── models/        # Mongoose schemas
 │       ├── routes/        # Express routes
-│       ├── services/      # Business logic, Gemini, MCP client
+│       ├── services/      # Business logic, Groq agent, MCP client
 │       ├── types/         # TypeScript types
 │       ├── app.ts
 │       └── server.ts
@@ -104,7 +110,8 @@ tiny-cats-mcp/
 ### Prerequisites
 - Node.js 20+
 - A MongoDB database (local or MongoDB Atlas)
-- A Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
+- A Groq API key from [Groq Console](https://console.groq.com/keys)
+- Clerk and ImageKit accounts
 
 ### 1. Clone and install
 
@@ -124,14 +131,17 @@ Create `backend/.env`:
 ```env
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/tiny-cats
-GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-3.8-flash
+GROQ_API_KEY=your_groq_api_key
+GROQ_MODEL=openai/gpt-oss-20b
 CLERK_SECRET_KEY=your_clerk_secret_key
 IMAGEKIT_PRIVATE_KEY=your_imagekit_private_key
+FRONTEND_URL=http://localhost:5173
 ```
 
 > Never commit your `.env` file. Keep it in `.gitignore`.
-> `GEMINI_MODEL` is optional; the backend defaults to `gemini-3.8-flash`.
+> `GROQ_MODEL` and `FRONTEND_URL` are optional; the model defaults to `openai/gpt-oss-20b`. The deprecated `llama-3.3-70b-versatile` value is automatically mapped to this replacement.
+> Set `VITE_CLERK_PUBLISHABLE_KEY` in `frontend/.env` to your Clerk publishable key.
+> In split frontend/backend deployments, set `VITE_SOCKET_URL` to the backend URL and `FRONTEND_URL` to the frontend origin.
 
 ### 3. Run the project
 
@@ -163,19 +173,26 @@ Base URL: `http://localhost:5000/api`
 |---|---|---|
 | GET | `/cats` | Get all cats |
 | GET | `/cats/:id` | Get one cat |
-| POST | `/cats/create` | Create a cat |
+| POST | `/cats/create` | Create a cat (Clerk auth; optional `image` file) |
+| DELETE | `/cats/:id` | Soft-delete a cat you created (Clerk auth) |
 | GET | `/cats/search/all?q=` | Search by name or breed |
 | POST | `/cats/recommend` | Exact match on `{ kidsFriendly, apartmentFriendly }` |
 | POST | `/cats/rank` | Score-based ranking with multiple preferences |
-| PATCH | `/cats/:id/image` | Authenticated cat image update (`image` file field) |
+| PATCH | `/cats/:id/image` | Update a cat image you own (`image` file field; Clerk auth) |
+| GET | `/favorites` | List the signed-in user's favorite cats |
+| PATCH | `/favorites/:id` | Set `{ favorite: boolean }` for a cat |
+| DELETE | `/favorites` | Clear the signed-in user's favorites |
 | PATCH | `/profile` | Authenticated Clerk profile update (`name` and/or `image` file field) |
-| POST | `/ai/ask` | Send a prompt to Gemini `{ prompt }` |
-| POST | `/aiRecommend/recommendByAi` | AI breed recommendation |
-| GET | `/mcp/test-mcp` | Demo: call MCP tool and summarize with Gemini |
+| POST | `/ai/ask` | Send a prompt to Groq `{ prompt }` (Clerk auth) |
+| POST | `/aiRecommend/recommendByAi` | Groq breed recommendation (Clerk auth) |
+| POST | `/agent/chat` | Groq agent HTTP fallback (Clerk auth) |
+| Socket.IO | `agent:message` / `agent:response` | Authenticated realtime AI agent |
+| GET | `/mcp/test-mcp` | Demo: call MCP tool and summarize with Groq |
 
-`PATCH /profile` and `PATCH /cats/:id/image` require a Clerk session token in the
-`Authorization: Bearer <token>` header and accept `multipart/form-data`. Cat image
-updates use the `image` file field. Profile updates accept `image` or `avatar` and
+Cat creation, deletion, favorites, AI calls, and profile/image changes require a Clerk session token in the
+`Authorization: Bearer <token>` header. Cat creation and image/profile uploads accept
+`multipart/form-data`; cat images are stored with ImageKit using the `image` file field.
+Profile updates accept `image` or `avatar` and
 an optional `name` field, and update the Clerk user directly, so a separate MongoDB
 user profile is not needed.
 
@@ -490,8 +507,8 @@ Cat {
 | Add `images: string[]` | Gallery on the detail page |
 | Add `avgRating` and `reviewCount` | Show ratings without extra queries |
 | Add `embedding: number[]` | Semantic search and similar cats |
-| Add `isAvailable` and `isDeleted` | Adoption status and soft delete |
-| Add `createdBy` (ref User) | Track who added the cat |
+| `isAvailable` and `isDeleted` | Adoption status and soft delete (implemented) |
+| `createdByClerkId` | Track cat ownership for authenticated edits/deletes (implemented) |
 
 Planned indexes:
 
@@ -512,7 +529,7 @@ catSchema.index({ energyLevel: 1, size: 1 });
 | `email` | String | required, unique, lowercase |
 | `passwordHash` | String | bcrypt hash (or Clerk-managed) |
 | `role` | `"user"` \| `"admin"` | default `"user"` |
-| `favorites` | ObjectId[] (ref Cat) | replaces localStorage |
+| Account favorites | Favorite collection keyed by Clerk user ID (implemented) |
 | `createdAt`, `updatedAt` | Date | timestamps |
 
 #### Review
