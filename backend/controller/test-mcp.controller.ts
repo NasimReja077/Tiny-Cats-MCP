@@ -1,10 +1,10 @@
 import type { Request, Response } from "express";
 import { callMcpTool, listMcpTools } from "../services/mcp.service.ts";
-import { generateAiResponse } from "../services/gemini.service.ts";
+import { generateAiResponse } from "../services/groq.service.ts";
 
 /**
  * GET /api/mcp/test-mcp
- * Demo: list tools → call recommend_cats → summarize with Gemini
+ * Demo: list tools → call recommend_cats → summarize with Groq
  */
 export const testMcpController = async (req: Request, res: Response) => {
   try {
@@ -37,7 +37,7 @@ export const testMcpController = async (req: Request, res: Response) => {
         ? content[0].text
         : JSON.stringify(result);
 
-    // 4. Ask Gemini to summarize
+    // 4. Ask Groq to summarize
     const prompt = `
 You are a helpful cat adoption advisor.
 
@@ -55,7 +55,7 @@ Write a short, friendly recommendation:
 
     return res.status(200).json({
       success: true,
-      message: "MCP + Gemini demo",
+      message: "MCP + Groq demo",
       data: {
         tools: tools.tools?.map((t) => t.name) ?? [],
         mcpResult: catsData,
