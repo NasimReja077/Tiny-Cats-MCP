@@ -42,7 +42,7 @@ A full-stack cat explorer with a Groq-powered **AI Advisor and Socket.IO agent**
 | Layer | Technologies |
 |---|---|
 | **Frontend** | React 19, TypeScript, Vite, React Router, Redux Toolkit + RTK Query, react-markdown, plain CSS (CSS variables) |
-| **Backend** | Node.js, Express 5, TypeScript, Mongoose, dotenv, tsx |
+| **Backend** | Node.js, Express 5, TypeScript, Mongoose, Nodemailer, dotenv, tsx |
 | **Database** | MongoDB |
 | **Authentication** | Clerk |
 | **AI** | Groq via `@langchain/groq` |
@@ -136,10 +136,16 @@ GROQ_MODEL=openai/gpt-oss-20b
 CLERK_SECRET_KEY=your_clerk_secret_key
 IMAGEKIT_PRIVATE_KEY=your_imagekit_private_key
 FRONTEND_URL=http://localhost:5173
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your_smtp_username
+SMTP_PASSWORD=your_smtp_password
+EMAIL_FROM=Tiny Cats <you@example.com>
 ```
 
 > Never commit your `.env` file. Keep it in `.gitignore`.
 > `GROQ_MODEL` and `FRONTEND_URL` are optional; the model defaults to `openai/gpt-oss-20b`. The deprecated `llama-3.3-70b-versatile` value is automatically mapped to this replacement.
+> Email delivery uses Nodemailer. Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, and `EMAIL_FROM` to your provider's SMTP settings. `SMTP_SECURE=true` enables TLS; if omitted, port 465 enables it automatically. Set both SMTP credentials or leave both unset for a relay that does not require authentication.
 > Set `VITE_CLERK_PUBLISHABLE_KEY` in `frontend/.env` to your Clerk publishable key.
 > In split frontend/backend deployments, set `VITE_SOCKET_URL` to the backend URL and `FRONTEND_URL` to the frontend origin.
 

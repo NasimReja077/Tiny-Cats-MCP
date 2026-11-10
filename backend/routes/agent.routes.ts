@@ -42,8 +42,8 @@ router.post("/listings/:id/external-post", generatePostController);
 // GET  /api/agent/emails
 // GET  /api/agent/emails/:id
 // POST /api/agent/emails/:id/send
-router.get("/emails", listEmailDraftsController);
-router.get("/emails/:id", getEmailDraftController);
+router.get("/emails", requireClerkAuth, listEmailDraftsController);
+router.get("/emails/:id", requireClerkAuth, getEmailDraftController);
 router.post("/emails/:id/send", requireClerkAuth, sendEmailDraftController);
 
 export default router;

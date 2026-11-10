@@ -43,7 +43,8 @@ type HistoryItem = {
  */
 async function runLocalTool(
   name: string,
-  args: Record<string, unknown>
+  args: Record<string, unknown>,
+  userId?: string,
 ): Promise<unknown> {
   switch (name) {
     case "search_web":
@@ -66,6 +67,7 @@ async function runLocalTool(
         to: String(args.to || ""),
         subject: String(args.subject || ""),
         body: String(args.body || ""),
+        ...(userId ? { userId } : {}),
         ...(args.relatedCattery
           ? { relatedCattery: String(args.relatedCattery) }
           : {}),
@@ -343,7 +345,7 @@ export async function runAgent(
         try {
           const isLocal = LOCAL_TOOL_DECLARATIONS.some((t) => t.name === name);
           if (isLocal) {
-            toolResult = await runLocalTool(name, args);
+            toolResult = await runLocalTool(name, args, userId);
           } else {
             const mcp = await getMcpClient();
             toolResult = await mcp.callTool({ name, arguments: args });

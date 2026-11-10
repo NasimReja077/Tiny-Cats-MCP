@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { getAuth } from "@clerk/express";
 import { runAgent } from "../services/agent.service.ts";
+import { EmailDraftError } from "../services/emailDraft.service.ts";
 import {
   getCatteryByIdService,
   listCatteriesService,
@@ -179,7 +180,11 @@ export const generatePostController = async (req: Request, res: Response) => {
 // ---------- Email drafts ----------
 export const getEmailDraftController = async (req: Request, res: Response) => {
   try {
-    const draft = await getEmailDraftByIdService(req.params.id as string);
+    const { userId } = getAuth(req);
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
+    const draft = await getEmailDraftByIdService(req.params.id as string, userId);
     if (!draft) {
       return res.status(404).json({ success: false, message: "Draft not found" });
     }
@@ -190,9 +195,13 @@ export const getEmailDraftController = async (req: Request, res: Response) => {
   }
 };
 
-export const listEmailDraftsController = async (_req: Request, res: Response) => {
+export const listEmailDraftsController = async (req: Request, res: Response) => {
   try {
-    const data = await listEmailDraftsService();
+    const { userId } = getAuth(req);
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
+    const data = await listEmailDraftsService(userId);
     return res.status(200).json({ success: true, count: data.length, data });
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Failed";
@@ -200,20 +209,21 @@ export const listEmailDraftsController = async (_req: Request, res: Response) =>
   }
 };
 
-/**
- * User presses "Send" in the UI → we mark as sent.
- * Wire real email provider inside markEmailSentService later.
- */
 export const sendEmailDraftController = async (req: Request, res: Response) => {
   try {
-    const draft = await markEmailSentService(req.params.id as string);
+    const { userId } = getAuth(req);
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
+    const draft = await markEmailSentService(req.params.id as string, userId);
     return res.status(200).json({
       success: true,
-      message: "Email marked as sent",
+      message: "Email sent",
       data: draft,
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Failed to send";
-    return res.status(400).json({ success: false, message: msg });
+    const statusCode = error instanceof EmailDraftError ? error.statusCode : 500;
+    return res.status(statusCode).json({ success: false, message: msg });
   }
 };
