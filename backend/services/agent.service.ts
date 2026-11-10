@@ -63,11 +63,12 @@ async function runLocalTool(
       return saveCatteryService(args as Parameters<typeof saveCatteryService>[0]);
 
     case "draft_email":
+      if (!userId) throw new Error("Authentication required to create email drafts");
       return createEmailDraftService({
         to: String(args.to || ""),
         subject: String(args.subject || ""),
         body: String(args.body || ""),
-        ...(userId ? { userId } : {}),
+        userId,
         ...(args.relatedCattery
           ? { relatedCattery: String(args.relatedCattery) }
           : {}),

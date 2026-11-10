@@ -50,10 +50,10 @@ export const listEmailDraftsService = async (userId: string) => {
 const createSmtpTransport = () => {
   const host = process.env.SMTP_HOST?.trim();
   const from = process.env.EMAIL_FROM?.trim() || process.env.SMTP_USER?.trim();
-  const port = Number(process.env.SMTP_PORT || 587);
-  const secure = process.env.SMTP_SECURE
-    ? process.env.SMTP_SECURE.toLowerCase() === "true"
-    : port === 465;
+  const portValue = process.env.SMTP_PORT?.trim() || "587";
+  const port = Number(portValue);
+  const secureValue = process.env.SMTP_SECURE?.trim().toLowerCase();
+  const secure = secureValue ? secureValue === "true" : port === 465;
   const user = process.env.SMTP_USER?.trim();
   const pass = process.env.SMTP_PASSWORD;
 
@@ -65,6 +65,9 @@ const createSmtpTransport = () => {
   }
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
     throw new EmailDraftError("SMTP_PORT must be a valid port number.", 503);
+  }
+  if (secureValue && secureValue !== "true" && secureValue !== "false") {
+    throw new EmailDraftError("SMTP_SECURE must be true or false.", 503);
   }
   if (Boolean(user) !== Boolean(pass)) {
     throw new EmailDraftError(
@@ -102,7 +105,7 @@ export const markEmailSentService = async (id: string, userId: string) => {
 
     draft.status = "sent";
     draft.sentAt = new Date();
-    draft.errorMessage = undefined;
+    draft.set("errorMessage", undefined);
     await draft.save();
     return draft;
   } catch (error) {
